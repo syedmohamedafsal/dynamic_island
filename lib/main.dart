@@ -34,6 +34,14 @@ class DynamicIslandBridge {
     }
   }
 
+  static Future<void> openNotificationAccessSettings() async {
+    try {
+      await _methodChannel.invokeMethod('openNotificationSettings');
+    } catch (e) {
+      debugPrint('Error opening notification settings: $e');
+    }
+  }
+
   /// Update text on the Dynamic Island notification
   static Future<void> updateText(String text) async {
     try {
@@ -44,6 +52,31 @@ class DynamicIslandBridge {
   }
 
   /// Receive data from Android through EventChannel (e.g., notifications)
-  static Stream<String> get notificationStream =>
-      _eventChannel.receiveBroadcastStream().map((event) => event.toString());
+  static Stream<dynamic> get notificationStream =>
+      _eventChannel.receiveBroadcastStream();
+}
+
+class NotificationActionInvoker {
+  static const MethodChannel _actionChannel =
+      MethodChannel('com.example.dynamic_island/action');
+
+  static Future<bool> invokeNotificationAction({
+    required String packageName,
+    required String notificationKey,
+    required int actionIndex,
+  }) async {
+    try {
+      final bool result = await _actionChannel.invokeMethod(
+        'invokeNotificationAction',
+        {
+          'packageName': packageName,
+          'notificationKey': notificationKey,
+          'actionIndex': actionIndex,
+        },
+      );
+      return result;
+    } catch (e) {
+      return false;
+    }
+  }
 }
